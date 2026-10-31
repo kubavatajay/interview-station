@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Interview AI Station</title>
+<meta name="theme-color" content="#0f2a36">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ============ STAFF: SETUP ============ -->
+<section id="scr-setup" class="screen staff" hidden>
+  <div class="staff-wrap">
+    <h1>Station setup</h1>
+    <p class="muted">Done once per computer by the coordinator. Applicants never see this screen.</p>
+    <div class="form-grid">
+      <label>Relay link (Apps Script web app URL)<input id="cfg-relay" type="url" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off"></label>
+      <label>Station token<input id="cfg-token" type="text" autocomplete="off"></label>
+      <label>This computer is station
+        <select id="cfg-station"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select>
+      </label>
+      <label>Proctor PIN (4–6 digits, set by you)<input id="cfg-pin" type="password" inputmode="numeric" autocomplete="off"></label>
+      <label>Interview date (leave blank to use today)<input id="cfg-date" type="date"></label>
+    </div>
+    <div class="row gap">
+      <button id="btn-prepare" class="btn primary">Save and prepare this station</button>
+      <button id="btn-setup-back" class="btn ghost">Back to applicant list</button>
+    </div>
+    <ul id="prep-list" class="checklist"></ul>
+    <div id="prep-progress" class="bar" hidden><span></span></div>
+  </div>
+</section>
+
+<!-- ============ STAFF: APPLICANT LIST ============ -->
+<section id="scr-list" class="screen staff" hidden>
+  <div class="staff-wrap">
+    <div class="row between">
+      <div>
+        <h1 id="list-title">Station</h1>
+        <p class="muted" id="list-sub"></p>
+      </div>
+      <div class="row gap">
+        <button id="btn-refresh" class="btn ghost">Refresh</button>
+        <button id="btn-settings" class="btn ghost">Setup</button>
+      </div>
+    </div>
+    <div id="health" class="health"></div>
+    <div id="resume-box" class="notice" hidden></div>
+    <table class="list">
+      <thead><tr><th>Round</th><th>Time</th><th>Applicant</th><th>Status</th><th></th></tr></thead>
+      <tbody id="list-body"></tbody>
+    </table>
+    <div class="row gap top">
+      <button id="btn-rehearsal" class="btn ghost">Start a rehearsal session</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ APPLICANT: READY ============ -->
+<section id="scr-ready" class="screen applicant" hidden>
+  <div class="ready-card">
+    <div class="mark" aria-hidden="true"></div>
+    <h1 class="serif">Interview AI Station</h1>
+    <p>Please put on the headset. When you are ready, click Begin.</p>
+    <button id="btn-begin" class="btn begin">Begin</button>
+  </div>
+</section>
+
+<!-- ============ APPLICANT: STAGE ============ -->
+<section id="scr-stage" class="screen applicant" hidden>
+  <header class="stage-top">
+    <span class="brand serif">Interview AI Station</span>
+    <span id="seg-label" class="seg"></span>
+  </header>
+  <div class="stage-mid">
+    <div id="scene" class="scene" aria-hidden="true"></div>
+    <p id="subtitle" class="subtitle"></p>
+  </div>
+  <footer class="stage-bottom">
+    <div id="listen" class="listen" hidden>
+      <div class="meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <span class="listen-label">Listening</span>
+      <span id="clock" class="clock" aria-live="off"></span>
+      <span id="note" class="note" aria-live="polite"></span>
+      <div class="row gap push">
+        <button id="btn-again" class="btn soft">Hear again</button>
+        <button id="btn-finish" class="btn finish">I have finished</button>
+      </div>
+    </div>
+    <div id="thinking" class="thinking" hidden><span></span><span></span><span></span></div>
+  </footer>
+  <button id="corner" class="corner" aria-label="Proctor controls"></button>
+</section>
+
+<!-- ============ APPLICANT: DONE ============ -->
+<section id="scr-done" class="screen applicant" hidden>
+  <div class="ready-card">
+    <div class="mark done" aria-hidden="true"></div>
+    <h1 class="serif">Thank you</h1>
+    <p id="done-text"></p>
+    <p id="done-upload" class="tiny"></p>
+  </div>
+  <button id="corner2" class="corner" aria-label="Proctor controls"></button>
+</section>
+
+<!-- ============ PROCTOR OVERLAY ============ -->
+<div id="ov-proctor" class="overlay" hidden>
+  <div class="ov-card">
+    <h2>Proctor controls</h2>
+    <div id="pin-box"><label>PIN<input id="pin-in" type="password" inputmode="numeric" autocomplete="off"></label><button id="pin-ok" class="btn primary">Unlock</button></div>
+    <div id="ctl-box" hidden>
+      <p id="ctl-status" class="muted"></p>
+      <div class="ctl-grid">
+        <button id="ctl-pause" class="btn">Pause</button>
+        <button id="ctl-resume" class="btn">Resume</button>
+        <button id="ctl-consent" class="btn">Confirm consent</button>
+        <button id="ctl-skip" class="btn">End this answer now</button>
+        <button id="ctl-end" class="btn danger">Stop session</button>
+        <button id="ctl-list" class="btn">Back to applicant list</button>
+      </div>
+    </div>
+    <button id="ov-close" class="btn ghost">Close</button>
+  </div>
+</div>
+
+<!-- ============ WAIT-FOR-PROCTOR OVERLAY (applicant sees a calm message) ============ -->
+<div id="ov-wait" class="overlay soft" hidden>
+  <div class="ov-card calm">
+    <p class="serif big">One moment, please.</p>
+    <p class="muted" id="wait-staff"></p>
+    <div class="row gap center" id="wait-buttons"></div>
+  </div>
+</div>
+
+<!-- ============ CONFIRM START ============ -->
+<div id="ov-start" class="overlay" hidden>
+  <div class="ov-card">
+    <h2 id="start-title">Start session</h2>
+    <p id="start-sub" class="muted"></p>
+    <label>Proctor PIN<input id="start-pin" type="password" inputmode="numeric" autocomplete="off"></label>
+    <div class="row gap"><button id="start-ok" class="btn primary">Start</button><button id="start-cancel" class="btn ghost">Cancel</button></div>
+  </div>
+</div>
+
+<script src="scenes.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

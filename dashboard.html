@@ -1,0 +1,1039 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Faculty Dashboard</title>
+<style>
+:root{
+  --bg:#f6f5f2; --panel:#ffffff; --ink:#1d2321; --muted:#5f6763; --line:#dedbd3; --soft:#efede7;
+  --accent:#1f5f58; --accent-ink:#ffffff; --accent-soft:#e3efec;
+  --good:#2e7d4f; --good-soft:#e6f3ea; --warn:#9a6a00; --warn-soft:#fbf1d9; --bad:#b3261e; --bad-soft:#fbe7e5;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#141816; --panel:#1c211f; --ink:#e7ebe9; --muted:#a3aca8; --line:#2f3633; --soft:#232a27;
+    --accent:#6cc2b6; --accent-ink:#0d1a18; --accent-soft:#1f3532;
+    --good:#7fd19c; --good-soft:#1d3426; --warn:#e8c063; --warn-soft:#3a3018; --bad:#ff8a80; --bad-soft:#3d1f1d;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font:14px/1.5 var(--sans)}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 20px;border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:5}
+header h1{font-size:16px;margin:0;font-weight:650;letter-spacing:.1px}
+header .sub{color:var(--muted);font-size:12px}
+nav{display:flex;gap:4px;flex-wrap:wrap;padding:10px 20px;border-bottom:1px solid var(--line);background:var(--panel)}
+nav button{border:1px solid transparent;background:transparent;color:var(--muted);padding:6px 12px;border-radius:8px;cursor:pointer;font:inherit}
+nav button.active{background:var(--accent-soft);color:var(--ink);border-color:var(--line);font-weight:600}
+main{max-width:1240px;margin:0 auto;padding:18px 20px 60px}
+section.tab{display:none}
+section.tab.active{display:block}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+.card h2{font-size:15px;margin:0 0 10px}
+.card h3{font-size:14px;margin:14px 0 8px}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:820px){.grid3{grid-template-columns:1fr}}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+input[type=text],input[type=password],select,textarea{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);font:inherit}
+textarea{min-height:220px;font-family:var(--sans);resize:vertical}
+button.btn{border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:7px 12px;border-radius:8px;cursor:pointer;font:inherit}
+button.btn:hover{background:var(--soft)}
+button.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button.btn.primary:hover{filter:brightness(1.05)}
+button.btn.small{padding:3px 8px;font-size:12px}
+button.btn:disabled{opacity:.5;cursor:not-allowed}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;color:var(--muted);font-weight:600;background:var(--soft);position:sticky;top:0}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.badge{display:inline-block;padding:1px 8px;border-radius:999px;font-size:11.5px;border:1px solid var(--line);background:var(--soft);color:var(--muted);white-space:nowrap}
+.badge.good{background:var(--good-soft);color:var(--good);border-color:transparent}
+.badge.warn{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.badge.bad{background:var(--bad-soft);color:var(--bad);border-color:transparent}
+.badge.accent{background:var(--accent-soft);color:var(--ink);border-color:transparent}
+.msg{padding:8px 12px;border-radius:8px;margin:8px 0;font-size:13px;white-space:pre-wrap}
+.msg.ok{background:var(--good-soft);color:var(--good)}
+.msg.err{background:var(--bad-soft);color:var(--bad)}
+.msg.info{background:var(--accent-soft);color:var(--ink)}
+.log{font-family:var(--mono);font-size:12px;background:var(--soft);border-radius:8px;padding:10px;max-height:260px;overflow:auto;white-space:pre-wrap}
+.qa{border-left:3px solid var(--line);padding:4px 0 4px 12px;margin:8px 0}
+.qa .q{font-weight:600}
+.qa .a{margin-top:4px;white-space:pre-wrap}
+.qual{border:1px solid var(--line);border-radius:10px;padding:12px;margin:10px 0;background:var(--panel)}
+.qual.flagged{border-color:var(--warn)}
+.qual .head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.qual .head .name{font-weight:650}
+.models{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px}
+@media (max-width:820px){.models{grid-template-columns:1fr}}
+.model{background:var(--soft);border-radius:8px;padding:10px}
+.model .score{font-size:20px;font-weight:700}
+.quote{display:block;margin:4px 0;padding:4px 8px;border-radius:6px;background:var(--panel);border:1px solid var(--line);font-style:italic}
+.quote.missing{background:var(--bad-soft);color:var(--bad);border-color:var(--bad);font-style:normal}
+.faculty{display:grid;grid-template-columns:180px 1fr auto;gap:8px;align-items:end;margin-top:10px}
+@media (max-width:820px){.faculty{grid-template-columns:1fr}}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px}
+.pill-sel{background:var(--accent-soft)}
+.right{margin-left:auto}
+.hidden{display:none !important}
+.spinner{display:inline-block;width:12px;height:12px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;vertical-align:-2px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.scroll{max-height:520px;overflow:auto;border:1px solid var(--line);border-radius:8px}
+details summary{cursor:pointer;color:var(--muted)}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Interview Station · Faculty Dashboard</h1>
+    <div class="sub">For faculty only. Never open this page on a station computer.</div>
+  </div>
+  <div class="row">
+    <span id="connStatus" class="badge">Not connected</span>
+    <button class="btn" id="btnSettings">Settings</button>
+  </div>
+</header>
+<nav id="tabs">
+  <button data-tab="schedule" class="active">Schedule</button>
+  <button data-tab="sessions">Sessions</button>
+  <button data-tab="scoring">Scoring</button>
+  <button data-tab="review">Review</button>
+  <button data-tab="ranking">Ranking</button>
+  <button data-tab="voice">Voice</button>
+</nav>
+<main>
+
+<section class="card hidden" id="settingsPanel">
+  <h2>Settings</h2>
+  <p class="muted small">Stored only in this browser on this computer. Keys are sent only to Anthropic and Google when scoring.</p>
+  <div class="grid3">
+    <div><label for="sRelay">Relay URL (Apps Script /exec)</label><input type="text" id="sRelay" placeholder="https://script.google.com/macros/s/…/exec"></div>
+    <div><label for="sAdmin">Admin token</label><input type="password" id="sAdmin"></div>
+    <div><label for="sToken">Station token (for Test and Voice)</label><input type="password" id="sToken"></div>
+    <div><label for="sClaude">Claude API key</label><input type="password" id="sClaude" placeholder="sk-ant-…"></div>
+    <div><label for="sGemini">Gemini API key</label><input type="password" id="sGemini"></div>
+    <div class="row" style="align-items:end"><button class="btn primary" id="btnSaveSettings">Save</button><button class="btn" id="btnTest">Test connection</button></div>
+  </div>
+  <div id="settingsMsg"></div>
+</section>
+
+<!-- SCHEDULE -->
+<section class="tab active" id="tab-schedule">
+  <div class="card">
+    <h2>Applicant schedule</h2>
+    <p class="muted small">One name per line. To set your own rounds, put the start time on its own line (for example <b>09:00</b>) above the names in that round, up to four names per round. Without times, names are split into rounds of four at 09:00, 09:50, 10:50, 11:40, 13:30 and 14:20. Codes A01 onward are assigned across the three days in order, so never reorder a day after it has been interviewed.</p>
+    <div class="grid3">
+      <div><label for="day1">Monday 2 November 2026</label><textarea id="day1" data-date="2026-11-02"></textarea><div class="small muted" id="day1count"></div></div>
+      <div><label for="day2">Thursday 5 November 2026</label><textarea id="day2" data-date="2026-11-05"></textarea><div class="small muted" id="day2count"></div></div>
+      <div><label for="day3">Friday 6 November 2026</label><textarea id="day3" data-date="2026-11-06"></textarea><div class="small muted" id="day3count"></div></div>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn primary" id="btnBuild">Build schedule</button>
+      <button class="btn" id="btnSaveSchedule" disabled>Save schedule to sheet</button>
+      <button class="btn" id="btnLoadSchedule">Load existing schedule</button>
+    </div>
+    <div id="scheduleMsg"></div>
+  </div>
+  <div class="card">
+    <h2>Preview</h2>
+    <div class="scroll"><table id="scheduleTable"><thead><tr><th>Date</th><th>Round</th><th>Time</th><th>Station</th><th>Code</th><th>Name</th><th>Status</th></tr></thead><tbody></tbody></table></div>
+  </div>
+</section>
+
+<!-- SESSIONS -->
+<section class="tab" id="tab-sessions">
+  <div class="card">
+    <div class="row">
+      <h2 style="margin:0">Sessions</h2>
+      <select id="sessDate" style="width:auto">
+        <option value="">All days</option>
+        <option value="2026-11-02">Mon 2 Nov</option>
+        <option value="2026-11-05">Thu 5 Nov</option>
+        <option value="2026-11-06">Fri 6 Nov</option>
+        <option value="rehearsal">Rehearsal (R codes)</option>
+      </select>
+      <button class="btn primary" id="btnLoadSessions">Load</button>
+    </div>
+    <div id="sessionsMsg"></div>
+    <div class="scroll" style="margin-top:10px"><table id="sessionsTable"><thead><tr><th>Code</th><th>Name</th><th>Date</th><th>Station</th><th>Time</th><th>Status</th><th class="num">Answers</th><th class="num">Transcribed</th><th>Missing transcripts</th></tr></thead><tbody></tbody></table></div>
+  </div>
+</section>
+
+<!-- SCORING -->
+<section class="tab" id="tab-scoring">
+  <div class="card">
+    <h2>Scoring</h2>
+    <p class="muted small">Each complete session is scored independently by Claude and Gemini using the frozen scoring instruction. Only applicant codes and transcripts are sent; names never leave the sheet.</p>
+    <div class="row">
+      <button class="btn" id="btnLoadScoring">Load data</button>
+      <button class="btn primary" id="btnScoreAll">Score all unscored complete sessions</button>
+      <label class="small" style="display:inline-flex;gap:6px;align-items:center;margin:0"><input type="checkbox" id="inclRehearsal"> include rehearsal (R) sessions</label>
+      <span id="scoreProgress" class="muted small"></span>
+    </div>
+    <div id="scoringMsg"></div>
+    <div class="scroll" style="margin-top:10px"><table id="scoringTable"><thead><tr><th>Code</th><th>Name</th><th>Date</th><th>Session</th><th>Scored</th><th>Open flags</th><th>Errors</th><th></th></tr></thead><tbody></tbody></table></div>
+    <h3>Log</h3>
+    <div class="log" id="scoreLog"></div>
+  </div>
+</section>
+
+<!-- REVIEW -->
+<section class="tab" id="tab-review">
+  <div class="card">
+    <div class="row">
+      <h2 style="margin:0">Review</h2>
+      <select id="reviewSelect" style="width:auto;min-width:280px"></select>
+      <button class="btn" id="btnReloadReview">Reload data</button>
+    </div>
+    <div id="reviewMsg"></div>
+  </div>
+  <div id="reviewBody"></div>
+</section>
+
+<!-- RANKING -->
+<section class="tab" id="tab-ranking">
+  <div class="card">
+    <div class="row">
+      <h2 style="margin:0">Ranking</h2>
+      <button class="btn" id="btnComputeRanking">Recompute</button>
+      <button class="btn" id="btnExportCsv">Export CSV</button>
+      <button class="btn primary" id="btnSaveRanking">Save to sheet</button>
+    </div>
+    <p class="muted small">One combined list of applicant codes (A01–A99) across all stations and all days; rehearsal (R) sessions are never included. Ties: higher lowest quality score, then smaller consistency gap. Ranks 1–8 are Selected; the rest are waitlisted in order. Applicants with open flags are not ranked until faculty resolve them.</p>
+    <div id="rankingMsg"></div>
+    <div id="dayAverages"></div>
+    <div class="scroll"><table id="rankingTable"><thead><tr><th class="num">#</th><th>Result</th><th>Name</th><th>Code</th><th>Date</th><th class="num">Station score</th><th class="num">Lowest quality</th><th class="num">Consistency gap</th><th>Status</th></tr></thead><tbody></tbody></table></div>
+    <h3>Not yet ranked</h3>
+    <table id="unrankedTable"><thead><tr><th>Name</th><th>Code</th><th>Date</th><th>Status</th></tr></thead><tbody></tbody></table>
+  </div>
+</section>
+
+<!-- VOICE -->
+<section class="tab" id="tab-voice">
+  <div class="card">
+    <div class="row">
+      <h2 style="margin:0">Voice lines</h2>
+      <button class="btn" id="btnLoadVoice">Load</button>
+      <button class="btn" id="btnVerifyAll">Verify all</button>
+    </div>
+    <p class="muted small">Every recorded line is transcribed back and compared with the approved text. Listen to each line before sign-off; regenerate any that sounds wrong.</p>
+    <div id="voiceMsg"></div>
+    <div class="scroll"><table id="voiceTable"><thead><tr><th>ID</th><th>Text</th><th class="num">Similarity</th><th>Verified</th><th></th></tr></thead><tbody></tbody></table></div>
+  </div>
+</section>
+
+</main>
+
+<script>
+(function(){
+'use strict';
+
+// ---------- utilities ----------
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function msg(el, text, kind){ if(typeof el==='string') el=$(el); if(!el) return; el.innerHTML = text ? `<div class="msg ${kind||'info'}">${esc(text)}</div>` : ''; }
+function store(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+function load(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } }
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+const DAYS = [
+  {date:'2026-11-02', label:'Mon 2 Nov', el:'day1'},
+  {date:'2026-11-05', label:'Thu 5 Nov', el:'day2'},
+  {date:'2026-11-06', label:'Fri 6 Nov', el:'day3'},
+];
+const ROUND_TIMES = ['09:00','09:50','10:50','11:40','13:30','14:20'];
+const dayLabel = d => { if(d === 'rehearsal') return 'Rehearsal'; if(d === '2026-11-01') return 'Sun 1 Nov (rehearsal)'; return (DAYS.find(x => x.date === d) || {label: d || ''}).label; };
+const isRehearsal = c => /^R/i.test(String(c || ''));
+const isApplicant = c => /^A\d{2}$/i.test(String(c || ''));
+
+// ---------- state ----------
+const S = {
+  master: null,
+  settings: load('isd.settings', {relay:'', admin:'', token:'', claude:'', gemini:''}),
+  schedule: [],     // applicants
+  built: null,      // schedule built locally, not yet saved
+  answers: [],
+  events: [],
+  scores: {},       // code -> data
+  voice: [],
+};
+
+// ---------- master ----------
+async function loadMaster(){
+  // The script is served by the relay (admin token), so the public site never contains the questions.
+  const st = S.settings || {};
+  if(st.relay && st.admin){
+    try{
+      const u = new URL(st.relay); u.searchParams.set('action','config'); u.searchParams.set('admin', st.admin);
+      const j = await (await fetch(u.toString(), {cache:'no-store'})).json();
+      if(j.ok && j.master){ S.master = j.master; store('isd.master', j.master); clearMasterMsg(); return true; }
+    }catch(e){}
+  }
+  try{ const r = await fetch('master.json', {cache:'no-store'}); if(r.ok){ S.master = await r.json(); clearMasterMsg(); return true; } }catch(e){}
+  const cached = load('isd.master', null);
+  if(cached){ S.master = cached; return true; }
+  if(!document.getElementById('masterMsg')) document.querySelector('main').insertAdjacentHTML('afterbegin', '<div id="masterMsg" class="msg err">The station script could not be loaded. Open Settings, enter the relay link and admin token, and press Save.</div>');
+  return false;
+}
+function clearMasterMsg(){ const m = document.getElementById('masterMsg'); if(m) m.remove(); }
+function sit(n){ return S.master.situations.find(s => s.n === n); }
+function questionText(qid){
+  const m = /^S(\d)_(OPEN|F[1-4]|DEF|ESC|REF)$/.exec(qid||'');
+  if(m){
+    const s = sit(+m[1]); if(!s) return '';
+    const k = m[2];
+    if(k==='OPEN') return s.opening;
+    if(k==='DEF') return s.default;
+    if(k==='ESC') return s.escalation;
+    if(k==='REF') return s.reflection;
+    const f = s.followups.find(f => f.id === k); return f ? f.text : '';
+  }
+  const lines = S.master.lines || {};
+  const map = {L_s1:'L_s1',L_s2:'L_s2',L_s3:'L_s3',L_s4:'L_s4',L2_redo:'L2_redo',C1_close:'C1_close_question',W3_consent:'W3_consent',W4_soundcheck:'W4_soundcheck',W5_practice:'W5_practice'};
+  return lines[map[qid]] || '';
+}
+
+// ---------- relay API ----------
+function relayUrl(){ const u = (S.settings.relay||'').trim(); if(!u) throw new Error('Set the relay URL in Settings first.'); return u; }
+async function apiGet(action, params={}, auth='admin'){
+  const u = new URL(relayUrl());
+  u.searchParams.set('action', action);
+  if(auth==='admin') u.searchParams.set('admin', S.settings.admin||'');
+  else u.searchParams.set('token', S.settings.token||'');
+  for(const [k,v] of Object.entries(params)) if(v!==undefined && v!==null && v!=='') u.searchParams.set(k, v);
+  let r;
+  try{ r = await fetch(u.toString(), {method:'GET'}); }catch(e){ throw new Error('Network error contacting relay: '+e.message); }
+  let j; try{ j = await r.json(); }catch(e){ throw new Error('Relay returned non-JSON (HTTP '+r.status+')'); }
+  if(!j || j.ok === false) throw new Error((j && j.error) || 'Relay error');
+  return j;
+}
+async function apiPost(action, body={}, auth='admin'){
+  const payload = Object.assign({action}, body);
+  if(auth==='admin') payload.admin = S.settings.admin||''; else payload.token = S.settings.token||'';
+  let r;
+  try{ r = await fetch(relayUrl(), {method:'POST', body: JSON.stringify(payload)}); }catch(e){ throw new Error('Network error contacting relay: '+e.message); }
+  let j; try{ j = await r.json(); }catch(e){ throw new Error('Relay returned non-JSON (HTTP '+r.status+')'); }
+  if(!j || j.ok === false) throw new Error((j && j.error) || 'Relay error');
+  return j;
+}
+
+// ---------- settings ----------
+function fillSettings(){ $('#sRelay').value=S.settings.relay||''; $('#sAdmin').value=S.settings.admin||''; $('#sToken').value=S.settings.token||''; $('#sClaude').value=S.settings.claude||''; $('#sGemini').value=S.settings.gemini||''; }
+function readSettings(){ S.settings = {relay:$('#sRelay').value.trim(), admin:$('#sAdmin').value.trim(), token:$('#sToken').value.trim(), claude:$('#sClaude').value.trim(), gemini:$('#sGemini').value.trim()}; store('isd.settings', S.settings); }
+$('#btnSettings').onclick = () => $('#settingsPanel').classList.toggle('hidden');
+$('#btnSaveSettings').onclick = async () => { readSettings(); msg('#settingsMsg','Saved in this browser.','ok'); await loadMaster(); if(S.settings.relay) setTimeout(() => $('#settingsPanel').classList.add('hidden'), 900); };
+$('#btnTest').onclick = async () => {
+  readSettings();
+  msg('#settingsMsg','Testing…','info');
+  const out = [];
+  try{
+    const p = await apiGet('ping', {}, 'token');
+    out.push(`Relay reachable (version ${p.version||'?'}). Keys on relay: Claude ${p.keys&&p.keys.claude?'yes':'NO'}, Gemini ${p.keys&&p.keys.gemini?'yes':'NO'}. Voice lines ready: ${p.voice?p.voice.ready+' of '+p.voice.total:'?'}.`);
+  }catch(e){ out.push('Station token / ping: '+e.message); }
+  try{ await apiGet('schedule_all'); out.push('Admin token accepted.'); }catch(e){ out.push('Admin token: '+e.message); }
+  out.push(S.settings.claude ? 'Claude key entered.' : 'Claude key missing (needed for scoring).');
+  out.push(S.settings.gemini ? 'Gemini key entered.' : 'Gemini key missing (needed for scoring).');
+  const bad = out.some(x => /error|NO|missing|invalid|denied|unauthor/i.test(x));
+  msg('#settingsMsg', out.join('\n'), bad ? 'err' : 'ok');
+  setConn(!out[0].startsWith('Station token'));
+};
+function setConn(ok){ const b=$('#connStatus'); b.textContent = ok ? 'Relay connected' : 'Not connected'; b.className = 'badge ' + (ok?'good':''); }
+
+// ---------- tabs ----------
+$$('#tabs button').forEach(b => b.onclick = () => {
+  $$('#tabs button').forEach(x => x.classList.toggle('active', x===b));
+  $$('section.tab').forEach(s => s.classList.toggle('active', s.id === 'tab-'+b.dataset.tab));
+  const t = b.dataset.tab;
+  if(t==='review') renderReviewSelect();
+  if(t==='ranking') renderRanking();
+});
+
+// ---------- schedule ----------
+const TIME_RE = /^(\d{1,2})[:.](\d{2})\s*(am|pm)?$/i;
+function normTime(line){
+  const m = TIME_RE.exec(line.trim()); if(!m) return null;
+  let h = +m[1]; const mi = m[2]; const ap = (m[3]||'').toLowerCase();
+  if(ap === 'pm' && h < 12) h += 12; if(ap === 'am' && h === 12) h = 0;
+  return String(h).padStart(2,'0') + ':' + mi;
+}
+function parseNames(el){ return el.value.split(/\r?\n/).map(s => s.replace(/\s+/g,' ').trim()).filter(l => l && !normTime(l)); }
+/* Returns [{time, names:[...]}]. Time lines start a round; otherwise rounds of four with the default times. */
+function parseRounds(el){
+  const lines = el.value.split(/\r?\n/).map(s => s.replace(/\s+/g,' ').trim());
+  const hasTimes = lines.some(l => normTime(l));
+  if(!hasTimes){
+    const names = lines.filter(Boolean); const rounds = [];
+    names.forEach((n,i) => { const r = Math.floor(i/4); (rounds[r] = rounds[r] || {time: ROUND_TIMES[r] || '', names: []}).names.push(n); });
+    return rounds;
+  }
+  const rounds = []; let cur = null;
+  lines.forEach(l => {
+    if(!l) return;
+    const t = normTime(l);
+    if(t){ cur = {time: t, names: []}; rounds.push(cur); return; }
+    if(!cur){ cur = {time: '', names: []}; rounds.push(cur); }
+    cur.names.push(l);
+  });
+  return rounds.filter(r => r.names.length);
+}
+function updateCounts(){ DAYS.forEach(d => { const rounds = parseRounds($('#'+d.el)); const n = rounds.reduce((a,r) => a + r.names.length, 0); const over = rounds.some(r => r.names.length > 4); $('#'+d.el+'count').textContent = n ? `${n} applicant${n===1?'':'s'} in ${rounds.length} round${rounds.length===1?'':'s'}${over?' — a round has more than four names':''}` : ''; }); }
+DAYS.forEach(d => $('#'+d.el).addEventListener('input', updateCounts));
+function buildSchedule(){
+  const out = []; let k = 0; const warnings = [];
+  DAYS.forEach(d => {
+    parseRounds($('#'+d.el)).forEach((r, ri) => {
+      if(r.names.length > 4) warnings.push(`${d.label}: the ${r.time || 'round ' + (ri+1)} round has ${r.names.length} names; only four stations exist.`);
+      if(!r.time) warnings.push(`${d.label}: round ${ri+1} has no start time.`);
+      r.names.forEach((name, i) => {
+        k++;
+        out.push({date:d.date, round: ri + 1, time: r.time, station: i + 1, code: 'A' + String(k).padStart(2,'0'), name});
+      });
+    });
+  });
+  return {rows: out, warnings};
+}
+function renderScheduleTable(rows){
+  const tb = $('#scheduleTable tbody');
+  tb.innerHTML = rows.map(r => `<tr><td>${esc(dayLabel(r.date))}</td><td>${esc(r.round)}</td><td>${esc(r.time)}</td><td>${esc(r.station)}</td><td><b>${esc(r.code)}</b></td><td>${esc(r.name)}</td><td>${r.status?`<span class="badge ${r.status==='done'?'good':''}">${esc(r.status)}</span>`:''}</td></tr>`).join('') || '<tr><td colspan="7" class="muted">No applicants yet.</td></tr>';
+}
+$('#btnBuild').onclick = () => {
+  const {rows, warnings} = buildSchedule();
+  S.built = rows;
+  renderScheduleTable(rows);
+  $('#btnSaveSchedule').disabled = !rows.length;
+  msg('#scheduleMsg', rows.length ? `${rows.length} applicants: codes A01–${rows[rows.length-1].code}. Check the preview, then save.` + (warnings.length? '\n'+warnings.join('\n'):'') : 'Paste names first.', warnings.length ? 'err' : (rows.length?'info':'err'));
+};
+$('#btnSaveSchedule').onclick = async () => {
+  if(!S.built || !S.built.length) return;
+  if(S.schedule.length && !confirm('This replaces the schedule already in the sheet. Continue?')) return;
+  try{
+    msg('#scheduleMsg','Saving…','info');
+    const r = await apiPost('saveSchedule', {applicants: S.built});
+    S.schedule = S.built.map(x => Object.assign({status:'pending'}, x));
+    msg('#scheduleMsg', `Saved ${r.count != null ? r.count : S.built.length} applicants to the sheet.`, 'ok');
+  }catch(e){ msg('#scheduleMsg', 'Could not save: '+e.message, 'err'); }
+};
+$('#btnLoadSchedule').onclick = async () => {
+  try{
+    msg('#scheduleMsg','Loading…','info');
+    await loadSchedule();
+    renderScheduleTable(S.schedule);
+    DAYS.forEach(d => {
+      const rows = S.schedule.filter(a => a.date===d.date).sort((a,b)=>codeNum(a.code)-codeNum(b.code));
+      const parts = []; let lastRound = null;
+      rows.forEach(a => { if(String(a.round) !== String(lastRound)){ if(parts.length) parts.push(''); parts.push(a.time || ''); lastRound = a.round; } parts.push(a.name); });
+      $('#'+d.el).value = parts.join('\n');
+    });
+    updateCounts();
+    msg('#scheduleMsg', `Loaded ${S.schedule.length} applicants from the sheet.`, 'ok');
+  }catch(e){ msg('#scheduleMsg', 'Could not load: '+e.message, 'err'); }
+};
+const codeNum = c => parseInt(String(c||'').replace(/\D/g,''),10) || 0;
+async function loadSchedule(){ const r = await apiGet('schedule_all'); S.schedule = (r.applicants||[]).map(a => Object.assign({}, a, {round:+a.round||a.round, station:+a.station||a.station})); return S.schedule; }
+async function loadAnswers(date){ const r = await apiGet('answers', date?{date}:{}); const rows = r.rows||[]; if(!date) S.answers = rows; return rows; }
+async function loadEvents(date){ try{ const r = await apiGet('events', date?{date}:{}); const rows = r.rows||[]; if(!date) S.events = rows; return rows; }catch(e){ if(!date) S.events = []; return []; } }
+async function loadScores(){ const r = await apiGet('scores'); S.scores = {}; (r.rows||[]).forEach(x => { let d = x.data; if(typeof d === 'string'){ try{ d = JSON.parse(d); }catch(e){ d = null; } } if(x.code && d) S.scores[x.code] = d; }); return S.scores; }
+async function loadAll(){ await Promise.all([loadSchedule(), loadAnswers(), loadEvents(), loadScores()]); }
+
+// ---------- answers helpers ----------
+const tsOf = r => { const t = Date.parse(r.startedAt || r.ts || ''); return isNaN(t) ? 0 : t; };
+// If a question was asked twice (a session resumed on the spare computer, or "Run again"), only the latest answer counts.
+function rowKey(r){ const k = r.kind || ''; return (['opening','followup','escalation','reflection','rating'].includes(k)) ? k + '|' + r.situation : (r.qid || r.rowId); }
+function rowsFor(code, all){
+  const rows = (all || S.answers).filter(r => r.code === code).sort((a,b) => tsOf(a)-tsOf(b));
+  const latest = new Map(); rows.forEach(r => latest.set(rowKey(r), r));
+  const keep = new Set(latest.values());
+  return rows.filter(r => keep.has(r));
+}
+function hasTranscript(r){ return r.transcript != null && String(r.transcript).trim() !== '' || r.noSpeech === true || r.noSpeech === 'true' || r.noSpeech === 'TRUE'; }
+function isComplete(code){
+  const rows = rowsFor(code);
+  if(rows.some(r => r.qid === 'S4_REF' || r.qid === 'L2_redo' || r.qid === 'C1_close')) return true;
+  return S.events.some(e => e.code === code && e.event === 'session_complete');
+}
+function nameOf(code){ const a = S.schedule.find(x => x.code === code); return a ? a.name : ''; }
+function dateOf(code){ const a = S.schedule.find(x => x.code === code); if(a) return a.date; const r = S.answers.find(x => x.code===code); return r ? r.date : ''; }
+function allCodes(){
+  const set = new Set(S.schedule.map(a => a.code));
+  S.answers.forEach(r => r.code && set.add(r.code));
+  Object.keys(S.scores).forEach(c => set.add(c));
+  const arr = Array.from(set);
+  const apps = arr.filter(c => !isRehearsal(c)).sort((a,b) => codeNum(a)-codeNum(b));
+  const reh = arr.filter(isRehearsal).sort();
+  return apps.concat(reh);
+}
+function joinTranscripts(rows){
+  return rows.map(r => {
+    const t = (r.transcript == null ? '' : String(r.transcript)).trim();
+    return t;
+  }).filter(Boolean).join(' ');
+}
+function answerText(rows){
+  const t = joinTranscripts(rows);
+  return t || '[no answer]';
+}
+
+// ---------- sessions tab ----------
+$('#btnLoadSessions').onclick = async () => {
+  const date = $('#sessDate').value;
+  try{
+    msg('#sessionsMsg','Loading…','info');
+    const q = date === 'rehearsal' ? '' : date;
+    let [sch, rows, ev] = await Promise.all([loadSchedule(), loadAnswers(q), loadEvents(q)]);
+    if(!q){ S.answers = rows; S.events = ev; }
+    if(date === 'rehearsal'){ rows = rows.filter(r => isRehearsal(r.code)); ev = ev.filter(e => isRehearsal(e.code)); }
+    else if(date){ rows = rows.filter(r => !isRehearsal(r.code)); }
+    renderSessions(date, rows, ev);
+    msg('#sessionsMsg','', '');
+  }catch(e){ msg('#sessionsMsg','Could not load: '+e.message,'err'); }
+};
+function renderSessions(date, rows, ev){
+  const apps = date === 'rehearsal' ? [] : S.schedule.filter(a => !date || a.date === date).slice().sort((a,b)=>codeNum(a.code)-codeNum(b.code));
+  const extraCodes = Array.from(new Set(rows.map(r => r.code))).filter(c => c && !apps.some(a => a.code===c));
+  const mk = c => ({code:c, name: isRehearsal(c) ? '(rehearsal)' : '(not in schedule)', date: (rows.find(r=>r.code===c)||{}).date, station:(rows.find(r=>r.code===c)||{}).station, time:''});
+  const extra = extraCodes.filter(c => !isRehearsal(c)).map(mk);
+  const reh = extraCodes.filter(isRehearsal).sort().map(mk);
+  const tb = $('#sessionsTable tbody');
+  const list = apps.concat(extra);
+  if(!list.length && !reh.length){ tb.innerHTML = '<tr><td colspan="9" class="muted">No applicants for this selection.</td></tr>'; return; }
+  const rowHtml = a => {
+    const rs = rows.filter(r => r.code === a.code);
+    const tr = rs.filter(hasTranscript);
+    const missing = rs.filter(r => !hasTranscript(r));
+    const complete = rs.some(r => r.qid==='S4_REF'||r.qid==='L2_redo'||r.qid==='C1_close') || ev.some(e => e.code===a.code && e.event==='session_complete');
+    const status = complete ? '<span class="badge good">complete</span>' : (rs.length ? '<span class="badge warn">in progress / partial</span>' : '<span class="badge">not started</span>');
+    const miss = missing.map(r => `<div class="row small"><span>${esc(r.qid)}</span><button class="btn small" data-retx="${esc(r.rowId)}">Retranscribe</button></div>`).join('');
+    return `<tr><td><b>${esc(a.code)}</b></td><td>${esc(a.name)}</td><td>${esc(dayLabel(a.date))}</td><td>${esc(a.station)}</td><td>${esc(a.time)}</td><td>${status}</td><td class="num">${rs.length}</td><td class="num">${tr.length}</td><td>${miss || '<span class="muted small">none</span>'}</td></tr>`;
+  };
+  tb.innerHTML = list.map(rowHtml).join('') + (reh.length ? `<tr><th colspan="9">Rehearsal sessions (calibration only, never ranked)</th></tr>` + reh.map(rowHtml).join('') : '');
+  $$('[data-retx]', tb).forEach(b => b.onclick = async () => {
+    b.disabled = true; b.innerHTML = '<span class="spinner"></span>';
+    try{
+      const r = await apiPost('retranscribe', {rowId: b.dataset.retx});
+      const row = rows.find(x => String(x.rowId) === String(b.dataset.retx));
+      if(row){ row.transcript = r.transcript; row.unclearCount = r.unclear_count; row.noSpeech = r.no_speech; }
+      const g = S.answers.find(x => String(x.rowId) === String(b.dataset.retx)); if(g){ g.transcript = r.transcript; g.unclearCount = r.unclear_count; g.noSpeech = r.no_speech; }
+      b.textContent = 'Done'; b.className='btn small'; b.parentElement.insertAdjacentHTML('beforeend', `<span class="badge good">transcribed</span>`);
+    }catch(e){ b.disabled=false; b.textContent='Retry'; b.parentElement.insertAdjacentHTML('beforeend', `<span class="badge bad">${esc(e.message)}</span>`); }
+  });
+}
+
+// ---------- scoring: message building ----------
+function buildUserMessage(code){
+  const rows = rowsFor(code);
+  const parts = [`Applicant code: ${code}`, ''];
+  S.master.situations.forEach(s => {
+    const n = s.n;
+    const open = rows.filter(r => r.qid === `S${n}_OPEN`);
+    const fu = rows.filter(r => r.kind === 'followup' && (r.qid||'').startsWith(`S${n}_`));
+    const escR = rows.filter(r => r.qid === `S${n}_ESC`);
+    const ref = rows.filter(r => r.qid === `S${n}_REF`);
+    let fuQid = fu.length ? fu[0].qid : null;
+    if(!fuQid){
+      const o = open[0];
+      const ch = o && o.routeChoice ? String(o.routeChoice).toUpperCase() : '';
+      fuQid = ch ? `S${n}_${ch==='DEFAULT'?'DEF':ch}` : null;
+    }
+    parts.push(`Situation ${n}`);
+    parts.push(`Qualities to score: ${s.qualities.join('; ')}`);
+    parts.push(`Look for: ${s.look_for}`);
+    if(s.notes) parts.push(`Note for scorers: ${s.notes}`);
+    parts.push(`Opening question: ${s.opening}`);
+    parts.push(`Answer: ${answerText(open)}`);
+    parts.push(`Follow-up question: ${fuQid ? questionText(fuQid) : '[not asked]'}`);
+    parts.push(`Answer: ${answerText(fu)}`);
+    parts.push(`Escalation question: ${s.escalation}`);
+    parts.push(`Answer: ${answerText(escR)}`);
+    parts.push(`Reflection question: ${s.reflection}`);
+    parts.push(`Answer: ${answerText(ref)}`);
+    parts.push('');
+  });
+  parts.push('Look-back (reported only, do not score):');
+  [1,2,3,4].forEach(n => parts.push(`Self-rating, Situation ${n}: ${answerText(rows.filter(r => r.qid === 'L_s'+n))}`));
+  parts.push(`Situation they would most like to handle again: ${answerText(rows.filter(r => r.qid === 'L2_redo'))}`);
+  parts.push(`Anything they would like the reviewers to know: ${answerText(rows.filter(r => r.qid === 'C1_close'))}`);
+  return parts.join('\n');
+}
+function situationTranscript(code, n){
+  const rows = rowsFor(code).filter(r => (r.qid||'').startsWith(`S${n}_`));
+  return joinTranscripts(rows);
+}
+
+// ---------- scoring: model calls ----------
+function extractJson(text){
+  if(text == null) throw new Error('empty response');
+  let t = String(text).trim();
+  t = t.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/,'').trim();
+  try{ return JSON.parse(t); }catch(e){}
+  const a = t.indexOf('{'), b = t.lastIndexOf('}');
+  if(a >= 0 && b > a){ return JSON.parse(t.slice(a, b+1)); }
+  throw new Error('response is not JSON');
+}
+function normScoreVal(v){
+  if(v == null) return null;
+  const s = String(v).trim().toLowerCase();
+  if(/^insufficient/.test(s)) return 'insufficient evidence';
+  const m = /^([1-5])(\.0)?$/.exec(s);
+  return m ? m[1] : null;
+}
+function validateScoreObj(o){
+  if(!o || typeof o !== 'object') throw new Error('not an object');
+  if(!Array.isArray(o.situations)) throw new Error('missing situations');
+  const out = {applicant_code: String(o.applicant_code||''), situations: [], summary: {consistent_strengths:[], inconsistent_responses:[], points_to_explore:[]}};
+  o.situations.forEach(s => {
+    const n = parseInt(s && s.situation, 10);
+    if(!(n>=1 && n<=4)) return;
+    const scores = (Array.isArray(s.scores)?s.scores:[]).map(q => ({
+      quality: String(q && q.quality || ''),
+      score: normScoreVal(q && q.score),
+      evidence: Array.isArray(q && q.evidence) ? q.evidence.map(String) : (q && q.evidence ? [String(q.evidence)] : []),
+      reason: String(q && q.reason || ''),
+      uncertainty: String(q && q.uncertainty || ''),
+    }));
+    out.situations.push({situation: n, scores});
+  });
+  if(!out.situations.length) throw new Error('no valid situations');
+  const sm = o.summary || {};
+  ['consistent_strengths','inconsistent_responses','points_to_explore'].forEach(k => { out.summary[k] = Array.isArray(sm[k]) ? sm[k].map(String) : []; });
+  return out;
+}
+async function callClaude(system, user){
+  if(!S.settings.claude) throw new Error('Claude key missing in Settings');
+  const body = {model: S.master.models.score_claude, max_tokens: 8000, system, messages:[{role:'user', content:user}], output_config:{format:{type:'json_schema', schema: S.master.schemas.score}}};
+  let r;
+  try{
+    r = await fetch('https://api.anthropic.com/v1/messages', {method:'POST', headers:{'x-api-key': S.settings.claude, 'anthropic-version':'2023-06-01', 'anthropic-dangerous-direct-browser-access':'true', 'content-type':'application/json'}, body: JSON.stringify(body)});
+  }catch(e){ throw new Error('network: '+e.message); }
+  const j = await r.json().catch(() => null);
+  if(!r.ok) throw new Error('HTTP '+r.status+': '+(j && j.error && j.error.message || 'error'));
+  if(j && j.stop_reason === 'refusal') throw new Error('model refused');
+  if(j && j.stop_reason === 'max_tokens') throw new Error('response cut off (max_tokens)');
+  const text = (j && Array.isArray(j.content) ? j.content.filter(c => c.type === 'text').map(c => c.text).join('') : '');
+  return validateScoreObj(extractJson(text));
+}
+async function callGemini(system, user){
+  if(!S.settings.gemini) throw new Error('Gemini key missing in Settings');
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(S.master.models.score_gemini)}:generateContent?key=${encodeURIComponent(S.settings.gemini)}`;
+  const body = {systemInstruction:{parts:[{text: system}]}, contents:[{role:'user', parts:[{text: user}]}], generationConfig:{responseMimeType:'application/json', temperature:0}};
+  let r;
+  try{ r = await fetch(url, {method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify(body)}); }catch(e){ throw new Error('network: '+e.message); }
+  const j = await r.json().catch(() => null);
+  if(!r.ok) throw new Error('HTTP '+r.status+': '+(j && j.error && j.error.message || 'error'));
+  const parts = j && j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts || [];
+  const text = parts.filter(p => typeof p.text === 'string' && !p.thought).map(p => p.text).join('');
+  if(!text) throw new Error('empty response' + (j && j.candidates && j.candidates[0] && j.candidates[0].finishReason ? ' ('+j.candidates[0].finishReason+')' : ''));
+  return validateScoreObj(extractJson(text));
+}
+
+// ---------- quote checks, confirmed scores, flags ----------
+function normText(s){
+  return String(s||'').toLowerCase()
+    .replace(/[‘’‚‛′]/g, "'").replace(/[“”„‟″]/g, '"')
+    .replace(/[^a-z0-9\s']/g, ' ')
+    .replace(/(^|\s)'+|'+(?=\s|$)/g, ' ')
+    .replace(/\s+/g, ' ').trim();
+}
+const normQ = s => String(s||'').toLowerCase().replace(/[^a-z]/g,'');
+function findQuality(modelObj, n, quality, idx){
+  if(!modelObj) return null;
+  const s = modelObj.situations.find(x => x.situation === n);
+  if(!s) return null;
+  const nq = normQ(quality);
+  let q = s.scores.find(x => normQ(x.quality) === nq);
+  if(!q) q = s.scores.find(x => { const a = normQ(x.quality); return a && (a.startsWith(nq.slice(0,10)) || nq.startsWith(a.slice(0,10))); });
+  if(!q && s.scores[idx]) q = s.scores[idx];
+  return q || null;
+}
+function quoteCheck(code, modelName, modelObj){
+  const res = {};
+  if(!modelObj) return res;
+  S.master.situations.forEach(s => {
+    const hay = normText(situationTranscript(code, s.n));
+    s.qualities.forEach((ql, i) => {
+      const q = findQuality(modelObj, s.n, ql, i);
+      if(!q) return;
+      const missing = (q.evidence||[]).filter(e => { const ne = normText(e); return !ne || hay.indexOf(ne) < 0; });
+      const needsEvidence = q.score && q.score !== 'insufficient evidence';
+      const found = missing.length === 0 && (!needsEvidence || (q.evidence||[]).length > 0);
+      res[`${modelName}|S${s.n}|${ql}`] = {found, missing};
+    });
+  });
+  return res;
+}
+function qualityStatus(data, n, ql, idx){
+  const key = `S${n}|${ql}`;
+  const fac = data && data.faculty && data.faculty[key];
+  const c = data && data.claude ? findQuality(data.claude, n, ql, idx) : null;
+  const g = data && data.gemini ? findQuality(data.gemini, n, ql, idx) : null;
+  const qcC = data && data.quoteChecks && data.quoteChecks[`claude|S${n}|${ql}`];
+  const qcG = data && data.quoteChecks && data.quoteChecks[`gemini|S${n}|${ql}`];
+  const reasons = [];
+  if(!c || !c.score) reasons.push('Claude score missing');
+  if(!g || !g.score) reasons.push('Gemini score missing');
+  if((c && c.score === 'insufficient evidence') || (g && g.score === 'insufficient evidence')) reasons.push('insufficient evidence');
+  const cn = c && /^[1-5]$/.test(c.score||'') ? +c.score : null;
+  const gn = g && /^[1-5]$/.test(g.score||'') ? +g.score : null;
+  if(cn != null && gn != null && Math.abs(cn - gn) >= 2) reasons.push(`models differ by ${Math.abs(cn-gn)}`);
+  if(c && qcC && !qcC.found) reasons.push('Claude quote not found');
+  if(g && qcG && !qcG.found) reasons.push('Gemini quote not found');
+  let confirmed = null, source = null;
+  if(fac && fac.score){
+    confirmed = fac.score === 'insufficient evidence' ? 'IE' : +fac.score; source = 'faculty';
+  }else if(!reasons.length && cn != null && gn != null){
+    confirmed = (cn + gn) / 2; source = 'models';
+  }
+  const open = !fac && reasons.length > 0;
+  return {key, c, g, cn, gn, fac, reasons, confirmed, source, open};
+}
+function computeFlags(data){
+  const flags = [];
+  S.master.situations.forEach(s => s.qualities.forEach((ql, i) => {
+    const st = qualityStatus(data, s.n, ql, i);
+    if(st.reasons.length) flags.push({situation: s.n, quality: ql, reasons: st.reasons});
+  }));
+  return flags;
+}
+function parseRating(text){
+  if(!text) return null;
+  const t = String(text).toLowerCase();
+  const re = /\b([1-5])\b|\b(one|two|three|four|five)\b/;
+  const m = re.exec(t);
+  if(!m) return null;
+  if(m[1]) return +m[1];
+  return {one:1,two:2,three:3,four:4,five:5}[m[2]];
+}
+function summarise(code, data){
+  // returns everything needed for review/ranking
+  const out = {code, situations: {}, confirmedNums: [], open: 0, complete: false, stationScore: null, minQuality: null, gaps: {}, maxGap: 0, selfCal: {}};
+  if(!data) return out;
+  S.master.situations.forEach(s => {
+    out.situations[s.n] = s.qualities.map((ql, i) => qualityStatus(data, s.n, ql, i));
+  });
+  Object.values(out.situations).forEach(list => list.forEach(st => {
+    if(st.open) out.open++;
+    if(typeof st.confirmed === 'number') out.confirmedNums.push(st.confirmed);
+  }));
+  out.complete = !!(data.claude || data.gemini || data.faculty) && out.open === 0 && out.confirmedNums.length > 0;
+  if(out.confirmedNums.length){
+    out.stationScore = out.confirmedNums.reduce((a,b)=>a+b,0) / out.confirmedNums.length;
+    out.minQuality = Math.min.apply(null, out.confirmedNums);
+  }
+  const get = (n, ql) => { const st = (out.situations[n]||[]).find(x => x.key === `S${n}|${ql}`); return st && typeof st.confirmed === 'number' ? st.confirmed : null; };
+  const a = get(2,'Coachability'), b = get(4,'Verification');
+  const c = get(1,'Ownership'), d = get(4,'Ownership');
+  out.gaps.coach = (a!=null && b!=null) ? Math.abs(a-b) : null;
+  out.gaps.own = (c!=null && d!=null) ? Math.abs(c-d) : null;
+  out.maxGap = Math.max(out.gaps.coach||0, out.gaps.own||0);
+  const sr = data.selfRatings || {};
+  [1,2,3,4].forEach(n => {
+    const nums = (out.situations[n]||[]).map(x => x.confirmed).filter(x => typeof x === 'number');
+    const mean = nums.length ? nums.reduce((p,q)=>p+q,0)/nums.length : null;
+    const self = sr['s'+n];
+    out.selfCal[n] = {self: (self==null?null:+self), mean, diff: (self!=null && mean!=null) ? (+self - mean) : null};
+  });
+  return out;
+}
+
+// ---------- scoring tab ----------
+function log(line){ const el = $('#scoreLog'); el.textContent += `[${new Date().toLocaleTimeString()}] ${line}\n`; el.scrollTop = el.scrollHeight; }
+$('#btnLoadScoring').onclick = async () => {
+  try{ msg('#scoringMsg','Loading…','info'); await loadAll(); renderScoringTable(); msg('#scoringMsg', `Loaded ${S.answers.length} answer rows, ${Object.keys(S.scores).length} scored applicants.`, 'ok'); }
+  catch(e){ msg('#scoringMsg','Could not load: '+e.message,'err'); }
+};
+const scoringErrors = {};
+function renderScoringTable(){
+  const tb = $('#scoringTable tbody');
+  const codes = allCodes();
+  if(!codes.length){ tb.innerHTML = '<tr><td colspan="8" class="muted">No sessions loaded.</td></tr>'; return; }
+  const rowFn = code => {
+    const data = S.scores[code];
+    const sm = summarise(code, data);
+    const complete = isComplete(code);
+    const scored = data ? `<span class="badge good">${esc((data.scoredAt||'').slice(0,16).replace('T',' '))}</span>` : '<span class="badge">no</span>';
+    const err = scoringErrors[code] || [data && data.claudeError ? 'Claude: '+data.claudeError : '', data && data.geminiError ? 'Gemini: '+data.geminiError : ''].filter(Boolean).join('; ');
+    return `<tr><td><b>${esc(code)}</b></td><td>${esc(nameOf(code) || (isRehearsal(code)?'(rehearsal)':''))}</td><td>${esc(dayLabel(dateOf(code)))}</td><td>${complete?'<span class="badge good">complete</span>':'<span class="badge warn">incomplete</span>'}</td><td>${scored}</td><td>${data ? (sm.open ? `<span class="badge warn">${sm.open}</span>` : '<span class="badge good">0</span>') : ''}</td><td class="small" style="color:var(--bad)">${esc(err)}</td><td><button class="btn small" data-score="${esc(code)}" ${complete?'':'disabled'}>${data?'Re-score':'Score'}</button></td></tr>`;
+  };
+  const appCodes = codes.filter(c => !isRehearsal(c)), rehCodes = codes.filter(isRehearsal);
+  tb.innerHTML = appCodes.map(rowFn).join('') + (rehCodes.length ? `<tr><th colspan="8">Rehearsal sessions (calibration only, never ranked)</th></tr>` + rehCodes.map(rowFn).join('') : '');
+  $$('[data-score]', tb).forEach(b => b.onclick = async () => {
+    if(S.scores[b.dataset.score] && !confirm(`Re-score ${b.dataset.score}? Faculty entries are kept; model scores are replaced.`)) return;
+    b.disabled = true; b.innerHTML = '<span class="spinner"></span>';
+    await scoreOne(b.dataset.score);
+    renderScoringTable();
+  });
+}
+async function scoreOne(code){
+  delete scoringErrors[code];
+  try{
+    const user = buildUserMessage(code);
+    if(/(?:^|\n)Applicant code: /.test(user) === false) throw new Error('message build failed');
+    const system = S.master.prompts.score_system;
+    log(`${code}: sending to Claude and Gemini…`);
+    const [cr, gr] = await Promise.allSettled([callClaude(system, user), callGemini(system, user)]);
+    const prev = S.scores[code] || {};
+    const data = {
+      code, version: S.master.version || '1.0', scoredAt: new Date().toISOString(),
+      claude: cr.status === 'fulfilled' ? cr.value : null, claudeError: cr.status === 'rejected' ? String(cr.reason && cr.reason.message || cr.reason) : '',
+      gemini: gr.status === 'fulfilled' ? gr.value : null, geminiError: gr.status === 'rejected' ? String(gr.reason && gr.reason.message || gr.reason) : '',
+      quoteChecks: {}, flags: [], faculty: prev.faculty || {},
+      selfRatings: {}, lookback: {},
+    };
+    Object.assign(data.quoteChecks, quoteCheck(code, 'claude', data.claude), quoteCheck(code, 'gemini', data.gemini));
+    data.flags = computeFlags(data);
+    const rows = rowsFor(code);
+    [1,2,3,4].forEach(n => { data.selfRatings['s'+n] = parseRating(joinTranscripts(rows.filter(r => r.qid === 'L_s'+n))); });
+    data.lookback = {redo: joinTranscripts(rows.filter(r => r.qid === 'L2_redo')), close: joinTranscripts(rows.filter(r => r.qid === 'C1_close'))};
+    if(!data.claude && !data.gemini) throw new Error(`both models failed — Claude: ${data.claudeError}; Gemini: ${data.geminiError}`);
+    await apiPost('saveScore', {code, data});
+    S.scores[code] = data;
+    const missingQuotes = Object.values(data.quoteChecks).filter(x => !x.found).length;
+    log(`${code}: saved. ${data.flags.length} flagged qualit${data.flags.length===1?'y':'ies'}${missingQuotes? ', '+missingQuotes+' with unverified quotes':''}.${data.claudeError?' Claude error: '+data.claudeError:''}${data.geminiError?' Gemini error: '+data.geminiError:''}`);
+    return true;
+  }catch(e){
+    scoringErrors[code] = e.message;
+    log(`${code}: FAILED — ${e.message}`);
+    return false;
+  }
+}
+$('#btnScoreAll').onclick = async () => {
+  const btn = $('#btnScoreAll'); btn.disabled = true;
+  try{
+    msg('#scoringMsg','Loading latest data…','info');
+    await loadAll();
+    const inclR = $('#inclRehearsal').checked;
+    const todo = allCodes().filter(c => isComplete(c) && !S.scores[c] && (inclR || !isRehearsal(c)));
+    if(!todo.length){ msg('#scoringMsg','Nothing to score: every complete session already has scores.','ok'); renderScoringTable(); return; }
+    msg('#scoringMsg', `Scoring ${todo.length} session${todo.length===1?'':'s'}, two at a time. Keep this tab open.`, 'info');
+    let done = 0, ok = 0;
+    const queue = todo.slice();
+    const worker = async () => { while(queue.length){ const c = queue.shift(); if(await scoreOne(c)) ok++; done++; $('#scoreProgress').textContent = `${done} of ${todo.length} done`; renderScoringTable(); } };
+    await Promise.all([worker(), worker()]);
+    msg('#scoringMsg', `Finished: ${ok} of ${todo.length} scored.` + (ok < todo.length ? ' See errors in the table; use Re-score to retry.' : ''), ok === todo.length ? 'ok' : 'err');
+  }catch(e){ msg('#scoringMsg','Scoring stopped: '+e.message,'err'); }
+  finally{ btn.disabled = false; renderScoringTable(); }
+};
+
+// ---------- review tab ----------
+function reviewOptions(codes){
+  const opt = c => { const sm = summarise(c, S.scores[c]); const tag = S.scores[c] ? (sm.open ? ` · ${sm.open} open flag${sm.open===1?'':'s'}` : ' · resolved') : ' · not scored'; return `<option value="${esc(c)}">${esc(c)} — ${esc(nameOf(c) || (isRehearsal(c)?'rehearsal':''))}${esc(tag)}</option>`; };
+  const a = codes.filter(c => !isRehearsal(c)), r = codes.filter(isRehearsal);
+  return '<option value="">Choose an applicant…</option>' + (a.length ? `<optgroup label="Applicants">${a.map(opt).join('')}</optgroup>` : '') + (r.length ? `<optgroup label="Rehearsal (calibration only)">${r.map(opt).join('')}</optgroup>` : '');
+}
+function renderReviewSelect(){
+  const sel = $('#reviewSelect');
+  const cur = sel.value;
+  const codes = allCodes().filter(c => S.scores[c] || rowsFor(c).length);
+  sel.innerHTML = reviewOptions(codes);
+  if(cur && codes.includes(cur)) sel.value = cur;
+  if(sel.value) renderReview(sel.value); else $('#reviewBody').innerHTML = codes.length ? '' : '<div class="card muted">Load data on the Scoring tab first.</div>';
+}
+$('#reviewSelect').onchange = () => renderReview($('#reviewSelect').value);
+$('#btnReloadReview').onclick = async () => { try{ msg('#reviewMsg','Loading…','info'); await loadAll(); msg('#reviewMsg','',''); renderReviewSelect(); }catch(e){ msg('#reviewMsg','Could not load: '+e.message,'err'); } };
+function fmt(x){ return x == null ? '—' : (Math.round(x*100)/100).toString(); }
+function scoreBadge(v){ if(!v) return '<span class="badge">—</span>'; if(v==='insufficient evidence') return '<span class="badge warn">insufficient evidence</span>'; return `<span class="score">${esc(v)}</span>`; }
+function renderModel(name, q, qc){
+  if(!q) return `<div class="model"><div class="small muted">${name}</div><div class="muted">No score</div></div>`;
+  const missing = new Set((qc && qc.missing) || []);
+  const ev = (q.evidence||[]).map(e => `<span class="quote ${missing.has(e)?'missing':''}" title="${missing.has(e)?'Not found in the transcript':''}">${missing.has(e)?'Not found in transcript: ':''}“${esc(e)}”</span>`).join('') || '<span class="muted small">No quote given</span>';
+  return `<div class="model"><div class="row"><span class="small muted">${name}</span><span class="right">${scoreBadge(q.score)}</span></div>
+    <div class="small" style="margin-top:6px"><b>Evidence</b></div>${ev}
+    <div class="small" style="margin-top:6px"><b>Reason</b> ${esc(q.reason)}</div>
+    <div class="small muted" style="margin-top:4px"><b>Uncertainty</b> ${esc(q.uncertainty)}</div></div>`;
+}
+function renderReview(code){
+  const body = $('#reviewBody');
+  if(!code){ body.innerHTML=''; return; }
+  const data = S.scores[code];
+  const rows = rowsFor(code);
+  const sm = summarise(code, data);
+  let html = `<div class="card"><div class="row"><h2 style="margin:0">${esc(code)} · ${esc(nameOf(code))}</h2><span class="badge">${esc(dayLabel(dateOf(code)))}</span>${isRehearsal(code)?'<span class="badge accent">rehearsal · never ranked</span>':''}
+    ${data ? (sm.open ? `<span class="badge warn">${sm.open} open flag${sm.open===1?'':'s'}</span>` : '<span class="badge good">all qualities confirmed</span>') : '<span class="badge">not scored</span>'}
+    <span class="right">Station score <b>${fmt(sm.stationScore)}</b></span></div>
+    ${data && (data.claudeError || data.geminiError) ? `<div class="msg err">${esc([data.claudeError?'Claude: '+data.claudeError:'', data.geminiError?'Gemini: '+data.geminiError:''].filter(Boolean).join('\n'))}</div>` : ''}
+    <div class="grid3" style="margin-top:10px">
+      <div><div class="small muted">Consistency: openness to correction (S2 Coachability vs S4 Verification)</div><b>${fmt(sm.gaps.coach)}</b> ${sm.gaps.coach>=2?'<span class="badge warn">gap ≥ 2</span>':''}</div>
+      <div><div class="small muted">Consistency: ownership (S1 vs S4)</div><b>${fmt(sm.gaps.own)}</b> ${sm.gaps.own>=2?'<span class="badge warn">gap ≥ 2</span>':''}</div>
+      <div><div class="small muted">Self-calibration (self-rating − confirmed mean)</div>${[1,2,3,4].map(n => { const x = sm.selfCal[n]||{}; return `S${n}: ${x.self==null?'—':x.self} vs ${fmt(x.mean)}${x.diff!=null?` (${x.diff>0?'+':''}${fmt(x.diff)})`:''}`; }).join('<br>')}</div>
+    </div></div>`;
+  S.master.situations.forEach(s => {
+    const n = s.n;
+    const qrows = rows.filter(r => (r.qid||'').startsWith(`S${n}_`));
+    const KIND = {opening:'Opening', followup:'Follow-up', escalation:'Escalation', reflection:'Reflection'};
+    const qa = qrows.map(r => `<div class="qa"><div class="q">${esc(KIND[r.kind] || r.kind || r.qid)} · ${esc(questionText(r.qid))}</div><div class="a">${hasTranscript(r) ? esc(r.transcript || '[no speech]') : '<span class="badge warn">transcript missing</span>'}</div><div class="small">${r.fileUrl ? `<a href="${esc(r.fileUrl)}" target="_blank" rel="noopener">Play recording</a>` : ''} <span class="muted">${r.durationSec?esc(r.durationSec)+' s':''}${r.kind==='opening' && r.routeChoice ? ' · follow-up chosen: '+esc(r.routeChoice) : ''}</span></div></div>`).join('') || '<div class="muted">No answers recorded.</div>';
+    html += `<div class="card"><h2>Situation ${n}</h2><details open><summary>Questions and answers</summary>${qa}</details>`;
+    (sm.situations[n] || s.qualities.map(()=>null)).forEach((st, i) => {
+      const ql = s.qualities[i];
+      if(!st){ html += `<div class="qual"><div class="head"><span class="name">${esc(ql)}</span><span class="badge">not scored</span></div></div>`; return; }
+      const qcC = data && data.quoteChecks ? data.quoteChecks[`claude|S${n}|${ql}`] : null;
+      const qcG = data && data.quoteChecks ? data.quoteChecks[`gemini|S${n}|${ql}`] : null;
+      const badges = st.reasons.map(r => `<span class="badge ${st.fac?'':'warn'}">${esc(r)}</span>`).join(' ');
+      const conf = st.confirmed == null ? '<span class="badge warn">needs faculty score</span>' : `<span class="badge ${st.source==='faculty'?'accent':'good'}">confirmed ${st.confirmed==='IE'?'insufficient evidence':fmt(st.confirmed)} · ${st.source}</span>`;
+      const fac = st.fac || {};
+      html += `<div class="qual ${st.open?'flagged':''}">
+        <div class="head"><span class="name">${esc(ql)}</span><span class="row">${badges} ${conf}</span></div>
+        <div class="models">${renderModel('Claude Opus', st.c, qcC)}${renderModel('Gemini Pro', st.g, qcG)}</div>
+        <div class="faculty">
+          <div><label>Faculty score</label><select data-fac-score="${esc(st.key)}"><option value="">— no faculty entry —</option>${['1','2','3','4','5','insufficient evidence'].map(v => `<option value="${v}" ${fac.score===v?'selected':''}>${v}</option>`).join('')}</select></div>
+          <div><label>Note</label><input type="text" data-fac-note="${esc(st.key)}" value="${esc(fac.note||'')}"></div>
+          <div><button class="btn primary" data-fac-save="${esc(st.key)}" ${data?'':'disabled'}>Save</button></div>
+        </div>
+        <div class="small muted" data-fac-msg="${esc(st.key)}">${fac.at?'Faculty entry saved '+esc(String(fac.at).slice(0,16).replace('T',' ')):''}</div>
+      </div>`;
+    });
+    html += `</div>`;
+  });
+  // look-back + summaries
+  const lb = data && data.lookback || {};
+  html += `<div class="card"><h2>Look-back</h2><div class="kv small">
+    <span class="muted">Self-ratings</span><span>${[1,2,3,4].map(n => `S${n}: ${data && data.selfRatings && data.selfRatings['s'+n]!=null ? data.selfRatings['s'+n] : '—'}`).join(' · ')}</span>
+    <span class="muted">Would handle again</span><span>${esc(lb.redo || joinTranscripts(rows.filter(r=>r.qid==='L2_redo')) || '—')}</span>
+    <span class="muted">For the reviewers</span><span>${esc(lb.close || joinTranscripts(rows.filter(r=>r.qid==='C1_close')) || '—')}</span></div></div>`;
+  const sumList = (o, k) => o && o.summary && o.summary[k] && o.summary[k].length ? '<ul>'+o.summary[k].map(x => `<li>${esc(x)}</li>`).join('')+'</ul>' : '<div class="muted small">—</div>';
+  html += `<div class="card"><h2>Model summaries</h2><div class="models">
+    ${['claude','gemini'].map(m => `<div class="model"><div class="small muted">${m==='claude'?'Claude Opus':'Gemini Pro'}</div>
+      <div class="small"><b>Consistent strengths</b></div>${sumList(data&&data[m],'consistent_strengths')}
+      <div class="small"><b>Inconsistent responses</b></div>${sumList(data&&data[m],'inconsistent_responses')}
+      <div class="small"><b>Points to explore</b></div>${sumList(data&&data[m],'points_to_explore')}</div>`).join('')}
+  </div></div>`;
+  body.innerHTML = html;
+  $$('[data-fac-save]', body).forEach(b => b.onclick = async () => {
+    const key = b.dataset.facSave;
+    const sel = body.querySelector(`[data-fac-score="${CSS.escape(key)}"]`);
+    const note = body.querySelector(`[data-fac-note="${CSS.escape(key)}"]`);
+    const out = body.querySelector(`[data-fac-msg="${CSS.escape(key)}"]`);
+    const d = JSON.parse(JSON.stringify(S.scores[code] || {}));
+    d.faculty = d.faculty || {};
+    if(sel.value) d.faculty[key] = {score: sel.value, note: note.value.trim(), at: new Date().toISOString()};
+    else delete d.faculty[key];
+    d.flags = computeFlags(d);
+    b.disabled = true; out.textContent = 'Saving…';
+    try{
+      await apiPost('saveScore', {code, data: d});
+      S.scores[code] = d;
+      renderReview(code);
+      const sel2 = $('#reviewSelect'); const keep = sel2.value; renderReviewSelectOptionsOnly(); sel2.value = keep;
+    }catch(e){ b.disabled = false; out.textContent = 'Could not save: ' + e.message; out.style.color = 'var(--bad)'; }
+  });
+}
+function renderReviewSelectOptionsOnly(){
+  const sel = $('#reviewSelect'); const cur = sel.value;
+  const codes = allCodes().filter(c => S.scores[c] || rowsFor(c).length);
+  sel.innerHTML = reviewOptions(codes);
+  sel.value = cur;
+}
+
+// ---------- ranking ----------
+let lastRanking = [];
+function computeRanking(){
+  const codes = allCodes().filter(c => isApplicant(c) && S.scores[c]);
+  const ranked = [], unranked = [];
+  codes.forEach(code => {
+    const sm = summarise(code, S.scores[code]);
+    const base = {code, name: nameOf(code), date: dateOf(code), stationScore: sm.stationScore, minQuality: sm.minQuality, maxGap: sm.maxGap, open: sm.open};
+    if(sm.complete && sm.stationScore != null) ranked.push(base); else unranked.push(Object.assign(base, {status: sm.open ? `${sm.open} open flag${sm.open===1?'':'s'}` : 'no confirmed scores'}));
+  });
+  allCodes().filter(c => isApplicant(c) && !S.scores[c]).forEach(code => unranked.push({code, name: nameOf(code), date: dateOf(code), status: isComplete(code) ? 'not scored yet' : 'session incomplete'}));
+  ranked.sort((a,b) => (b.stationScore - a.stationScore) || (b.minQuality - a.minQuality) || (a.maxGap - b.maxGap) || (codeNum(a.code) - codeNum(b.code)));
+  ranked.forEach((r, i) => {
+    r.rank = i + 1;
+    r.label = i < 8 ? 'Selected' : 'W' + (i - 7);
+    r.status = 'complete';
+    const p = ranked[i-1];
+    r.tie = !!(p && p.stationScore === r.stationScore && p.minQuality === r.minQuality && p.maxGap === r.maxGap);
+  });
+  return {ranked, unranked};
+}
+function renderRanking(){
+  const {ranked, unranked} = computeRanking();
+  lastRanking = ranked;
+  const boundaryTie = ranked.length > 8 && ranked[8].tie;
+  msg('#rankingMsg', boundaryTie ? `Ranks 8 and 9 are identical on every tie-break (${ranked[7].code} and ${ranked[8].code}). The committee decides which is selected.` : '', 'err');
+  $('#rankingTable tbody').innerHTML = ranked.map(r => `<tr ${r.rank===8?'style="border-bottom:2px solid var(--accent)"':''}><td class="num">${r.rank}</td><td>${r.label==='Selected'?'<span class="badge good">Selected</span>':`<span class="badge">${esc(r.label)}</span>`}${r.tie?' <span class="badge warn" title="Identical on all tie-breaks; committee decides">tie</span>':''}</td><td>${esc(r.name)}</td><td>${esc(r.code)}</td><td>${esc(dayLabel(r.date))}</td><td class="num"><b>${fmt(r.stationScore)}</b></td><td class="num">${fmt(r.minQuality)}</td><td class="num">${fmt(r.maxGap)}</td><td><span class="badge good">complete</span></td></tr>`).join('') || '<tr><td colspan="9" class="muted">No applicant is ready to rank yet. Load and score sessions, then resolve open flags on the Review tab.</td></tr>';
+  $('#unrankedTable tbody').innerHTML = unranked.map(r => `<tr><td>${esc(r.name)}</td><td>${esc(r.code)}</td><td>${esc(dayLabel(r.date))}</td><td><span class="badge warn">${esc(r.status)}</span></td></tr>`).join('') || '<tr><td colspan="4" class="muted">None.</td></tr>';
+  // day averages
+  const by = {};
+  ranked.forEach(r => { (by[r.date] = by[r.date] || []).push(r.stationScore); });
+  const avgs = DAYS.map(d => ({d, n: (by[d.date]||[]).length, avg: (by[d.date]||[]).length ? by[d.date].reduce((a,b)=>a+b,0)/by[d.date].length : null}));
+  const vals = avgs.filter(a => a.avg != null).map(a => a.avg);
+  const spread = vals.length > 1 ? Math.max.apply(null, vals) - Math.min.apply(null, vals) : 0;
+  $('#dayAverages').innerHTML = `<div class="row small" style="margin:8px 0">${avgs.map(a => `<span class="badge">${esc(a.d.label)}: ${a.avg==null?'—':fmt(a.avg)} (n=${a.n})</span>`).join(' ')}${spread > 0.5 ? `<span class="badge bad">Day averages differ by ${fmt(spread)} — review that day's transcripts before ranking</span>` : (vals.length>1?'<span class="badge good">Day averages within 0.5</span>':'')}</div>`;
+}
+$('#btnComputeRanking').onclick = async () => { try{ msg('#rankingMsg','Loading…','info'); await loadAll(); renderRanking(); }catch(e){ msg('#rankingMsg','Could not load: '+e.message,'err'); } };
+function csvCell(v){ const s = v == null ? '' : String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s; }
+$('#btnExportCsv').onclick = () => {
+  const {ranked, unranked} = computeRanking();
+  const lines = [['Rank','Result','Name','Code','Date','Station score','Lowest quality','Consistency gap','Status'].join(',')];
+  ranked.forEach(r => lines.push([r.rank, r.label, r.name, r.code, r.date, r.stationScore!=null?r.stationScore.toFixed(2):'', r.minQuality!=null?r.minQuality.toFixed(2):'', r.maxGap!=null?r.maxGap.toFixed(2):'', r.status].map(csvCell).join(',')));
+  unranked.forEach(r => lines.push(['', 'Not ranked', r.name, r.code, r.date, '', '', '', r.status].map(csvCell).join(',')));
+  const blob = new Blob(['﻿' + lines.join('\r\n')], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = 'station-ranking-' + new Date().toISOString().slice(0,10) + '.csv';
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+};
+$('#btnSaveRanking').onclick = async () => {
+  const {ranked, unranked} = computeRanking();
+  const rows = ranked.map(r => ({rank: r.rank, label: r.label, code: r.code, name: r.name, date: r.date, stationScore: +r.stationScore.toFixed(3), status: r.status}))
+    .concat(unranked.map(r => ({rank: '', label: 'Not ranked', code: r.code, name: r.name, date: r.date, stationScore: '', status: r.status})));
+  try{ msg('#rankingMsg','Saving…','info'); await apiPost('saveRanking', {rows}); msg('#rankingMsg', `Saved ${rows.length} rows to the Ranking tab of the sheet.`, 'ok'); }
+  catch(e){ msg('#rankingMsg','Could not save: '+e.message,'err'); }
+};
+
+// ---------- voice ----------
+let currentAudio = null;
+$('#btnLoadVoice').onclick = loadVoice;
+async function loadVoice(){
+  try{
+    msg('#voiceMsg','Loading…','info');
+    const r = await apiGet('voicelist', {}, 'token');
+    S.voice = r.lines || [];
+    renderVoice();
+    const ready = S.voice.filter(v => v.fileId).length, ver = S.voice.filter(v => v.verified === true || v.verified === 'true' || v.verified === 'TRUE').length;
+    msg('#voiceMsg', `${ready} of ${S.voice.length} lines recorded; ${ver} verified.`, ready === S.voice.length && ver === S.voice.length ? 'ok' : 'info');
+  }catch(e){ msg('#voiceMsg','Could not load: '+e.message,'err'); }
+}
+function isVerified(v){ return v === true || v === 'true' || v === 'TRUE'; }
+function renderVoice(){
+  $('#voiceTable tbody').innerHTML = S.voice.map(v => `<tr><td><b>${esc(v.id)}</b></td><td>${esc(v.text)}</td><td class="num">${v.similarity===''||v.similarity==null?'—':fmt(+v.similarity)}</td><td>${!v.fileId?'<span class="badge bad">not recorded</span>':isVerified(v.verified)?'<span class="badge good">verified</span>':'<span class="badge warn">check</span>'}</td><td class="row"><button class="btn small" data-play="${esc(v.id)}" ${v.fileId?'':'disabled'}>Play</button><button class="btn small" data-regen="${esc(v.id)}">Regenerate</button></td></tr>`).join('') || '<tr><td colspan="5" class="muted">No lines.</td></tr>';
+  $$('[data-play]').forEach(b => b.onclick = async () => {
+    b.disabled = true; const t = b.textContent; b.innerHTML = '<span class="spinner"></span>';
+    try{
+      const r = await apiGet('voice', {id: b.dataset.play}, 'token');
+      if(currentAudio){ try{ currentAudio.pause(); }catch(e){} }
+      currentAudio = new Audio(`data:${r.mime||'audio/wav'};base64,${r.data}`);
+      await currentAudio.play();
+    }catch(e){ msg('#voiceMsg', `Could not play ${b.dataset.play}: ${e.message}`, 'err'); }
+    finally{ b.disabled = false; b.textContent = t; }
+  });
+  $$('[data-regen]').forEach(b => b.onclick = async () => {
+    if(!confirm(`Regenerate the recording of ${b.dataset.regen}? Only do this before sign-off.`)) return;
+    b.disabled = true; b.innerHTML = '<span class="spinner"></span>';
+    try{ const r = await apiPost('regenVoice', {id: b.dataset.regen}); await loadVoice(); msg('#voiceMsg', `${b.dataset.regen} regenerated; similarity ${r.similarity!=null?fmt(+r.similarity):'—'}. Listen to it again before sign-off.`, 'ok'); }
+    catch(e){ msg('#voiceMsg', `Could not regenerate ${b.dataset.regen}: ${e.message}`, 'err'); b.disabled = false; b.textContent = 'Regenerate'; }
+  });
+}
+$('#btnVerifyAll').onclick = async () => {
+  const b = $('#btnVerifyAll'); b.disabled = true;
+  try{ msg('#voiceMsg','Verifying every line (this can take a few minutes)…','info'); const r = await apiPost('verifyVoice', {}); const res = r.results || []; const bad = res.filter(x => !isVerified(x.verified)); await loadVoice(); msg('#voiceMsg', `Verified ${res.length - bad.length} of ${res.length}.` + (bad.length ? ' Check: ' + bad.map(x => x.id).join(', ') : ''), bad.length ? 'err' : 'ok'); }
+  catch(e){ msg('#voiceMsg','Could not verify: '+e.message,'err'); }
+  finally{ b.disabled = false; }
+};
+
+// ---------- init ----------
+(async function init(){
+  fillSettings();
+  if(!S.settings.relay) $('#settingsPanel').classList.remove('hidden');
+  updateCounts();
+  await loadMaster();
+  window.__dash = {S, buildUserMessage, normText, parseRating, computeRanking, summarise};
+})();
+})();
+</script>
+</body>
+</html>
