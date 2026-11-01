@@ -70,6 +70,11 @@ table.list td.name { font-weight: 600; }
 .ready-card { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px; }
 .ready-card h1 { font-weight: 500; font-size: 44px; margin: 18px 0 8px; letter-spacing: .2px; }
 .ready-card p { font-size: 20px; color: #c9d9d7; max-width: 640px; }
+.name-box { margin-top: 22px; display: flex; flex-direction: column; align-items: center; gap: 10px; width: min(460px, 90vw); }
+.name-box label { font-size: 18px; color: #e9f1f0; }
+.name-box input { width: 100%; font-size: 22px; padding: 12px 16px; border-radius: 12px; border: 2px solid #7fa9a6; background: #f5f2ec; color: #0b3f45; text-align: center; }
+.name-box input:focus { outline: none; border-color: #c99a45; }
+.name-hint { font-size: 16px !important; color: #f3c98a !important; margin: 0; }
 .mark { width: 72px; height: 72px; border-radius: 50%; border: 2px solid rgba(255,255,255,.5); position: relative; }
 .mark::after { content: ''; position: absolute; inset: 14px; border-radius: 50%; background: var(--gold); opacity: .85; }
 .mark.done::after { background: #7fb69a; }

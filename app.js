@@ -688,7 +688,27 @@ async function startSession(applicant, resume) {
     }
     checkpoint();
   }
+  const nb = $('name-box');
+  if (nb) {
+    nb.hidden = !!(S.session.typedName || S.session.unit > 0);
+    $('ready-name').value = '';
+    $('name-hint').hidden = true;
+  }
   show('scr-ready');
+  if (nb && !nb.hidden) setTimeout(() => { try { $('ready-name').focus(); } catch (e) { } }, 200);
+}
+
+/* Name check: the applicant types their name; a mismatch is logged for reviewers, the interview continues. */
+function nameTokens(s) {
+  return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z\s]/g, ' ').split(/\s+/).filter((w) => w.length > 1);
+}
+function namesMatch(typed, scheduled) {
+  const t = nameTokens(typed), s = nameTokens(scheduled);
+  if (!t.length || !s.length) return false;
+  if (t.join('') === s.join('')) return true;
+  const hits = s.filter((w) => t.includes(w)).length;
+  return hits >= Math.min(2, s.length);
 }
 
 /* ------------------------------------------------------------------ */
@@ -836,11 +856,23 @@ async function boot() {
     startSession({ code: `R-${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}-S${S.cfg.station}`, name: 'Rehearsal', date: 'rehearsal' }, null);
   });
   $('btn-begin').onclick = async () => {
+    const nb = $('name-box');
+    if (nb && !nb.hidden) {
+      const typed = $('ready-name').value.trim().replace(/\s+/g, ' ');
+      if (nameTokens(typed).length < 1) { $('name-hint').hidden = false; $('ready-name').focus(); return; }
+      const isReh = S.session.date === 'rehearsal';
+      const match = isReh ? true : namesMatch(typed, S.session.name);
+      S.session.typedName = typed; S.session.nameMatch = match; checkpoint();
+      logEvent('name_typed', typed);
+      if (!match) logEvent('name_mismatch', 'typed: ' + typed + ' | scheduled: ' + (S.session.name || ''));
+      nb.hidden = true;
+    }
     try { await initMic(); } catch (e) { }
     if (S.session.unit === 0) logEvent('session_start', S.session.code);
     runSession();
   };
   $('btn-finish').onclick = () => { S.finishPressed = true; };
+  $('ready-name').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); $('btn-begin').click(); } });
   $('btn-again').onclick = () => { if (!S.hearAgain) S.hearAgain = 'request'; };
 
   ['corner', 'corner2'].forEach((id) => bindLongPress($(id), openProctor));
