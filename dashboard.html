@@ -981,9 +981,43 @@ $('#btnSaveRanking').onclick = async () => {
   const {ranked, unranked} = computeRanking();
   const rows = ranked.map(r => ({rank: r.rank, label: r.label, code: r.code, name: r.name, date: r.date, stationScore: +r.stationScore.toFixed(3), status: r.status}))
     .concat(unranked.map(r => ({rank: '', label: 'Not ranked', code: r.code, name: r.name, date: r.date, stationScore: '', status: r.status})));
-  try{ msg('#rankingMsg','Saving…','info'); await apiPost('saveRanking', {rows}); msg('#rankingMsg', `Saved ${rows.length} rows to the Ranking tab of the sheet.`, 'ok'); }
+  const details = buildDetails();
+  try{ msg('#rankingMsg','Saving…','info'); await apiPost('saveRanking', {rows, details}); msg('#rankingMsg', `Saved ${rows.length} applicants to the sheet (Results, Evaluation and Evidence tabs).`, 'ok'); }
   catch(e){ msg('#rankingMsg','Could not save: '+e.message,'err'); }
 };
+
+// ---------- detailed evaluation export (Evaluation + Evidence tabs) ----------
+function buildDetails(){
+  const out = [];
+  allCodes().filter(c => S.scores[c]).forEach(code => {
+    const data = S.scores[code];
+    const sm = summarise(code, data);
+    const quals = [], evidence = [];
+    S.master.situations.forEach(s => s.qualities.forEach((ql, i) => {
+      const st = qualityStatus(data, s.n, ql, i);
+      let value = null, note = '';
+      if (typeof st.confirmed === 'number') value = st.confirmed;
+      else if (st.confirmed === 'IE') note = 'insufficient evidence';
+      else if (st.cn != null || st.gn != null) { const v = [st.cn, st.gn].filter(x => x != null); value = v.reduce((a,b)=>a+b,0)/v.length; note = 'check'; }
+      quals.push({situation: s.n, quality: ql, value, note});
+      const pick = st.c || st.g || {};
+      evidence.push({situation: s.n, quality: ql,
+        score: typeof st.confirmed === 'number' ? st.confirmed : (st.confirmed === 'IE' ? 'insufficient evidence' : ''),
+        source: st.source || (st.open ? 'needs faculty review' : ''),
+        claude: st.c ? st.c.score : '', gemini: st.g ? st.g.score : '', faculty: st.fac ? st.fac.score : '',
+        evidence: (pick.evidence || []).join(' | '), reason: pick.reason || '', uncertainty: pick.uncertainty || '',
+        flags: st.reasons.join('; ')});
+    }));
+    const sumOf = k => { const m = (data.claude && data.claude.summary && data.claude.summary[k] && data.claude.summary[k].length) ? data.claude : data.gemini; return m && m.summary && m.summary[k] ? m.summary[k].join(' • ') : ''; };
+    const selfDiffs = Object.values(sm.selfCal || {}).map(x => x.diff).filter(x => x != null);
+    out.push({code, name: nameOf(code) || (isApplicant(code) ? '' : 'Rehearsal'), date: dateOf(code), overall: sm.stationScore, open: sm.open,
+      maxGap: sm.maxGap, selfDiff: selfDiffs.length ? selfDiffs.reduce((a,b)=>a+b,0)/selfDiffs.length : null,
+      selfRatings: data.selfRatings || {}, quals, evidence,
+      strengths: sumOf('consistent_strengths'), inconsistent: sumOf('inconsistent_responses'), explore: sumOf('points_to_explore'),
+      redo: (data.lookback && data.lookback.redo) || '', close: (data.lookback && data.lookback.close) || ''});
+  });
+  return out;
+}
 
 // ---------- voice ----------
 let currentAudio = null;
