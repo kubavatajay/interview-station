@@ -169,7 +169,7 @@ details summary{cursor:pointer;color:var(--muted)}
 <section class="tab" id="tab-scoring">
   <div class="card">
     <h2>Scoring</h2>
-    <p class="muted small">Each complete session is scored independently by Claude and Gemini using the frozen scoring instruction. Only applicant codes and transcripts are sent; names never leave the sheet.</p>
+    <p class="muted small">Each complete session is scored independently by Claude and Gemini using the frozen scoring instruction. Applicant codes, names and transcripts are sent; the scorers are told never to let a name influence a score.</p>
     <div class="row">
       <button class="btn" id="btnLoadScoring">Load data</button>
       <button class="btn primary" id="btnScoreAll">Score all unscored complete sessions</button>
@@ -621,7 +621,7 @@ async function callClaude(system, user){
 async function callGemini(system, user){
   if(!S.settings.gemini) throw new Error('Gemini key missing in Settings');
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(S.master.models.score_gemini)}:generateContent?key=${encodeURIComponent(S.settings.gemini)}`;
-  const body = {systemInstruction:{parts:[{text: system}]}, contents:[{role:'user', parts:[{text: user}]}], generationConfig:{responseMimeType:'application/json', temperature:0}};
+  const body = {systemInstruction:{parts:[{text: system}]}, contents:[{role:'user', parts:[{text: user}]}], generationConfig:{responseMimeType:'application/json', responseJsonSchema: S.master.schemas.score, temperature:0}};
   let r;
   try{ r = await fetch(url, {method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify(body)}); }catch(e){ throw new Error('network: '+e.message); }
   const j = await r.json().catch(() => null);
