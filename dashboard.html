@@ -528,7 +528,7 @@ function renderSessions(date, rows, ev){
 // ---------- scoring: message building ----------
 function buildUserMessage(code){
   const rows = rowsFor(code);
-  const parts = [`Applicant code: ${code}`, ''];
+  const parts = [`Applicant code: ${code}`, `Applicant name: ${nameOf(code)}`, ''];
   S.master.situations.forEach(s => {
     const n = s.n;
     const open = rows.filter(r => r.qid === `S${n}_OPEN`);
